@@ -1,10 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
 import { useDeviceStore } from '@/stores/device-store';
-import { useRealtimeEvents } from '@/hooks/use-realtime';
 import '../global.css';
 
 export { ErrorBoundary } from 'expo-router';
@@ -15,11 +13,6 @@ export const unstable_settings = {
 
 SplashScreen.preventAutoHideAsync();
 
-function AppProviders({ children }: { children: React.ReactNode }) {
-  useRealtimeEvents();
-  return <>{children}</>;
-}
-
 export default function RootLayout() {
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: {
@@ -28,34 +21,29 @@ export default function RootLayout() {
   }));
 
   const loadDeviceId = useDeviceStore((s) => s.loadDeviceId);
-  const isDeviceLoaded = useDeviceStore((s) => s.isLoaded);
-
-  const [fontsLoaded, fontError] = useFonts({});
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    loadDeviceId();
-  }, [loadDeviceId]);
-
-  useEffect(() => {
-    if (fontError) throw fontError;
-  }, [fontError]);
-
-  useEffect(() => {
-    if (fontsLoaded && isDeviceLoaded) {
+    async function init() {
+      try {
+        await loadDeviceId();
+      } catch (e) {
+        console.warn('Failed to load device ID:', e);
+      }
+      setReady(true);
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, isDeviceLoaded]);
+    init();
+  }, []);
 
-  if (!fontsLoaded || !isDeviceLoaded) return null;
+  if (!ready) return null;
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AppProviders>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-        </Stack>
-      </AppProviders>
+      <Stack>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+      </Stack>
     </QueryClientProvider>
   );
 }

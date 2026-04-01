@@ -1,46 +1,38 @@
 import { useState } from 'react';
-import { ActivityIndicator, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import MapView from 'react-native-maps';
 import { useLocation } from '@/hooks/use-location';
-import { useZones } from '@/hooks/use-parking';
 import { MAP_CONFIG } from '@/constants/config';
-import { ParkingMarker } from '@/components/parking-marker';
 import { ActionButton } from '@/components/action-button';
-import { SpotCard } from '@/components/spot-card';
-import type { ParkingEvent } from '@/types/models';
 
 export default function MapScreen() {
   const { location, error, isLoading } = useLocation();
-  const [selectedEvent, setSelectedEvent] = useState<ParkingEvent | null>(null);
 
   const lat = location?.latitude ?? MAP_CONFIG.defaultRegion.latitude;
   const lng = location?.longitude ?? MAP_CONFIG.defaultRegion.longitude;
 
-  const { data } = useZones(lat, lng, MAP_CONFIG.searchRadius);
-  const events = data?.events ?? [];
-
   if (isLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-slate-50">
+      <View style={styles.center}>
         <ActivityIndicator size="large" color="#3B82F6" />
-        <Text className="text-gray-500 mt-4">Obtendo localização...</Text>
+        <Text style={styles.loadingText}>Obtendo localização...</Text>
       </View>
     );
   }
 
   if (error && !location) {
     return (
-      <View className="flex-1 items-center justify-center bg-slate-50 px-8">
-        <Text className="text-gray-900 text-lg font-bold mb-2">Localização indisponível</Text>
-        <Text className="text-gray-500 text-center">{error}</Text>
+      <View style={styles.center}>
+        <Text style={styles.errorTitle}>Localização indisponível</Text>
+        <Text style={styles.errorText}>{error}</Text>
       </View>
     );
   }
 
   return (
-    <View className="flex-1">
+    <View style={styles.container}>
       <MapView
-        className="flex-1"
+        style={styles.map}
         initialRegion={{
           latitude: lat,
           longitude: lng,
@@ -49,24 +41,39 @@ export default function MapScreen() {
         }}
         showsUserLocation
         showsMyLocationButton
-      >
-        {events.map((event) => (
-          <ParkingMarker
-            key={event.id}
-            event={event}
-            onPress={() => setSelectedEvent(event)}
-          />
-        ))}
-      </MapView>
-
+      />
       <ActionButton latitude={lat} longitude={lng} />
-
-      {selectedEvent && (
-        <SpotCard
-          event={selectedEvent}
-          onClose={() => setSelectedEvent(null)}
-        />
-      )}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  map: {
+    flex: 1,
+  },
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F8FAFC',
+  },
+  loadingText: {
+    color: '#64748B',
+    marginTop: 16,
+    fontSize: 16,
+  },
+  errorTitle: {
+    color: '#0F172A',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  errorText: {
+    color: '#64748B',
+    textAlign: 'center',
+    paddingHorizontal: 32,
+  },
+});

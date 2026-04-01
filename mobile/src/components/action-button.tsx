@@ -1,4 +1,4 @@
-import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useParkingStore } from '@/stores/parking-store';
 import { useParkHere, useLeaveSpot } from '@/hooks/use-parking';
 
@@ -23,18 +23,20 @@ export function ActionButton({ latitude, longitude }: ActionButtonProps) {
   };
 
   return (
-    <View className="absolute bottom-6 left-0 right-0 items-center">
+    <View style={styles.wrapper}>
       <Pressable
         onPress={handlePress}
         disabled={isLoading}
-        className={`rounded-full px-10 py-4 shadow-lg ${
-          activeEvent ? 'bg-red-500' : 'bg-blue-500'
-        } ${isLoading ? 'opacity-60' : ''}`}
+        style={[
+          styles.button,
+          activeEvent ? styles.buttonLeave : styles.buttonPark,
+          isLoading && styles.buttonDisabled,
+        ]}
       >
         {isLoading ? (
           <ActivityIndicator color="#FFFFFF" />
         ) : (
-          <Text className="text-white text-lg font-bold">
+          <Text style={styles.buttonText}>
             {activeEvent ? 'Saí da vaga' : 'Estacionei'}
           </Text>
         )}
@@ -42,3 +44,37 @@ export function ActionButton({ latitude, longitude }: ActionButtonProps) {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  wrapper: {
+    position: 'absolute',
+    bottom: 32,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+  },
+  button: {
+    borderRadius: 999,
+    paddingHorizontal: 40,
+    paddingVertical: 16,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  buttonPark: {
+    backgroundColor: '#3B82F6',
+  },
+  buttonLeave: {
+    backgroundColor: '#EF4444',
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+});
